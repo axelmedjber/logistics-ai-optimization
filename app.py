@@ -33,6 +33,14 @@ st.caption("Demand forecasting and inventory control (EOQ, safety stock, reorder
 
 # --- Data source ---------------------------------------------------------
 uploaded = st.sidebar.file_uploader("Upload a demand CSV (date, units_sold)", type="csv")
+with open(DATA_FILE, "rb") as _f:
+    st.sidebar.download_button(
+        "⬇️ Download template / sample CSV",
+        _f.read(),
+        file_name="demand_template.csv",
+        mime="text/csv",
+        help="Two columns: date (YYYY-MM-DD) and units_sold (integer).",
+    )
 df = pd.read_csv(uploaded if uploaded is not None else DATA_FILE, parse_dates=["date"])
 demand = df["units_sold"].to_numpy(dtype=float)
 
