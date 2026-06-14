@@ -16,9 +16,25 @@ unit tests and a runnable example on realistic data.
 | --- | --- |
 | `src/forecasting.py` | Moving-average and least-squares **linear-trend** forecasts, plus a mean-absolute-error metric for backtesting. |
 | `src/inventory.py` | **Economic Order Quantity (EOQ)**, **safety stock** for a target service level, **reorder point**, and a combined `(Q, R)` policy. |
+| `app.py` | Interactive web demo (Streamlit): tune the cost/lead-time assumptions and watch the forecast and inventory policy update live. |
 | `examples/run_analysis.py` | Loads 90 days of demand, backtests the forecasts, and prints a full replenishment policy. |
 
-## Quick start
+## Web demo
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Sliders for order cost, holding cost, lead time and service level recompute
+the EOQ, reorder point and safety stock in real time, next to a demand-forecast
+chart. You can also upload your own `date, units_sold` CSV.
+
+> **Deploy a public demo (free):** push this repo to GitHub, go to
+> [share.streamlit.io](https://share.streamlit.io), click *New app*, pick the
+> repo and set the main file to `app.py`. You get a public URL to share.
+
+## Command-line demo
 
 ```bash
 pip install -r requirements.txt
