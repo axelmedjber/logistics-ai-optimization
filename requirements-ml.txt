@@ -1,0 +1,6 @@
+# Deep-learning extras for the demand-forecasting notebook / training script.
+# Kept separate from requirements.txt so the lightweight Streamlit demo
+# (and its free-tier deployment) does not have to pull in PyTorch.
+fastai>=2.7
+torch>=2.0
+scikit-learn>=1.3
