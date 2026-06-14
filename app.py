@@ -41,8 +41,19 @@ with open(DATA_FILE, "rb") as _f:
         mime="text/csv",
         help="Two columns: date (YYYY-MM-DD) and units_sold (integer).",
     )
-df = pd.read_csv(uploaded if uploaded is not None else DATA_FILE, parse_dates=["date"])
-demand = df["units_sold"].to_numpy(dtype=float)
+try:
+    df = pd.read_csv(uploaded if uploaded is not None else DATA_FILE)
+    if "units_sold" not in df.columns or "date" not in df.columns:
+        raise ValueError(f"missing columns. Found: {list(df.columns)}")
+    df["date"] = pd.to_datetime(df["date"])
+    demand = df["units_sold"].astype(float).to_numpy()
+except Exception as exc:
+    st.error(
+        f"Could not read this CSV: {exc}\n\n"
+        "The file needs two columns: **date** (YYYY-MM-DD) and **units_sold** "
+        "(number). Use the **Download template** button in the sidebar."
+    )
+    st.stop()
 
 # --- Assumptions ---------------------------------------------------------
 st.sidebar.header("Assumptions")
