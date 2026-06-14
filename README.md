@@ -6,15 +6,41 @@ decisions:
 1. **Demand forecasting** — how much will we sell next week?
 2. **Inventory control** — how much to order, and when?
 
-The goal is transparency over hype: every method is a well-known,
-hand-auditable formula (no black-box models, no heavyweight ML stack), with
-unit tests and a runnable example on realistic data.
+It pairs **transparent, hand-auditable formulas** (EOQ, safety stock, reorder
+point) with a **deep-learning demand model** (fastai), each with honest
+benchmarks and tests on real data.
+
+## Deep learning demand model
+
+`notebooks/demand_forecasting_fastai.ipynb` trains a tabular **neural network**
+(fastai / PyTorch) to predict demand from calendar and weather features, on the
+public **UCI Bike Sharing** dataset. It is benchmarked on a held-out validation
+set against two honest baselines:
+
+| Model | MAE | RMSE | R² |
+| --- | --- | --- | --- |
+| Mean predictor | 1497 | 1808 | -0.0 |
+| Linear regression | 525 | 733 | 0.8 |
+| **Deep learning (fastai)** | **483** | **651** | **0.9** |
+
+The network beats both baselines on every metric. Run it end to end:
+
+```bash
+pip install -r requirements-ml.txt
+python -m ml.train                 # train + benchmark, exports models/demand_fastai.pkl
+python -m ml.predict               # predict demand on new rows
+```
+
+> The deep-learning stack (PyTorch) is kept in a separate `requirements-ml.txt`
+> so the lightweight Streamlit demo below stays easy to deploy. The notebook
+> also runs as-is on Kaggle / Google Colab (free GPU).
 
 ## Features
 
 | Module | What it does |
 | --- | --- |
-| `src/forecasting.py` | Moving-average and least-squares **linear-trend** forecasts, plus a mean-absolute-error metric for backtesting. |
+| `ml/` + `notebooks/` | **Deep-learning** demand model (fastai): training, benchmarking and CSV inference. |
+| `src/forecasting.py` | Moving-average and least-squares **linear-trend** forecasts (used as baselines), plus a mean-absolute-error metric. |
 | `src/inventory.py` | **Economic Order Quantity (EOQ)**, **safety stock** for a target service level, **reorder point**, and a combined `(Q, R)` policy. |
 | `app.py` | Interactive web demo (Streamlit): tune the cost/lead-time assumptions and watch the forecast and inventory policy update live. |
 | `examples/run_analysis.py` | Loads 90 days of demand, backtests the forecasts, and prints a full replenishment policy. |
