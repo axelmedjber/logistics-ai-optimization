@@ -24,6 +24,7 @@ from src.forecasting import (
     mean_absolute_error,
 )
 from src.inventory import InventoryPolicy
+from src import ingest
 
 DATA_FILE = Path(__file__).resolve().parent / "data" / "demand_history.csv"
 
@@ -41,19 +42,37 @@ with open(DATA_FILE, "rb") as _f:
         mime="text/csv",
         help="Two columns: date (YYYY-MM-DD) and units_sold (integer).",
     )
-try:
-    df = pd.read_csv(uploaded if uploaded is not None else DATA_FILE)
-    if "units_sold" not in df.columns or "date" not in df.columns:
-        raise ValueError(f"missing columns. Found: {list(df.columns)}")
-    df["date"] = pd.to_datetime(df["date"])
-    demand = df["units_sold"].astype(float).to_numpy()
-except Exception as exc:
-    st.error(
-        f"Could not read this CSV: {exc}\n\n"
-        "The file needs two columns: **date** (YYYY-MM-DD) and **units_sold** "
-        "(number). Use the **Download template** button in the sidebar."
-    )
-    st.stop()
+if uploaded is None:
+    df = ingest.coerce(pd.read_csv(DATA_FILE))
+else:
+    try:
+        raw = pd.read_csv(uploaded)
+    except Exception as exc:
+        st.error(f"Could not read this file as CSV: {exc}")
+        st.stop()
+
+    if set(ingest.REQUIRED).issubset(raw.columns):
+        df = ingest.coerce(raw)
+    else:
+        st.warning(
+            "Your CSV columns don't match the expected format. Map them below."
+        )
+        cols = list(raw.columns)
+
+        def _idx(field):
+            g = ingest.guess_column(cols, field)
+            return cols.index(g) if g in cols else 0
+
+        m1, m2 = st.columns(2)
+        date_col = m1.selectbox("Date column", cols, index=_idx("date"))
+        units_col = m2.selectbox("Demand / units column", cols, index=_idx("units_sold"))
+        df = ingest.apply_mapping(raw, date_col, units_col)
+
+    if df.empty:
+        st.error("No valid rows after parsing — check your column mapping.")
+        st.stop()
+
+demand = df["units_sold"].astype(float).to_numpy()
 
 # --- Assumptions ---------------------------------------------------------
 st.sidebar.header("Assumptions")
